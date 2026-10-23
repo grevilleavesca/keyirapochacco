@@ -937,3 +937,82 @@ body {
 .sound-btn:hover { transform: translateY(-2px); opacity: 1; }
 .sound-btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) { .sound-btn { transition: none; } }
+
+/* ---------- Envelope layers (before the main letter) ---------- */
+/* Each layer tints the envelope a different soft color. */
+.envelope.tone-1 .env-back,
+.envelope.tone-1 .env-front,
+.envelope.tone-1 .env-flap,
+.envelope.tone-1 .env-frame { filter: hue-rotate(32deg) saturate(.9); }
+.envelope.tone-2 .env-back,
+.envelope.tone-2 .env-front,
+.envelope.tone-2 .env-flap,
+.envelope.tone-2 .env-frame { filter: hue-rotate(-55deg) saturate(.85); }
+.envelope.tone-3 .env-back,
+.envelope.tone-3 .env-front,
+.envelope.tone-3 .env-flap,
+.envelope.tone-3 .env-frame { filter: hue-rotate(74deg) saturate(.85) brightness(1.1); }
+
+/* A new envelope slides in after the previous one is read. */
+.envelope.arrive { animation: env-arrive .8s cubic-bezier(.2, .8, .25, 1) backwards; }
+@keyframes env-arrive {
+  from { opacity: 0; transform: translateY(70px) rotate(4deg) scale(.92); }
+}
+
+/* The card with the affirmations. */
+.note {
+  width: min(100%, 440px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 30px clamp(20px, 6vw, 36px) 32px;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 6px;
+  box-shadow: 0 26px 50px -20px var(--shadow), 0 2px 0 var(--paper-edge);
+  outline: 1px dashed var(--accent-soft);
+  outline-offset: -10px;
+  position: relative;
+  animation: rise .8s cubic-bezier(.2, .7, .2, 1) backwards;
+}
+.note::after {
+  content: "";
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 100px;
+  height: 26px;
+  transform: translateX(-50%) rotate(-3deg);
+  background-color: var(--tape);
+  background-image: repeating-linear-gradient(45deg, var(--tape-stripe) 0 7px, transparent 7px 14px);
+  box-shadow: 0 2px 4px var(--shadow);
+}
+.note-lines {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  text-align: center;
+}
+.note-lines li {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.05rem, 3.8vw, 1.25rem);
+  line-height: 1.5;
+  color: var(--ink);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  animation: fade .7s ease backwards;
+}
+.note-lines li:nth-child(1) { animation-delay: .25s; }
+.note-lines li:nth-child(2) { animation-delay: .75s; color: var(--accent); }
+.note-lines li:nth-child(3) { animation-delay: 1.25s; }
+.note-lines li:nth-child(4) { animation-delay: 1.75s; color: var(--accent); }
+.note .flourish { margin: 0 auto; }
+.note .surprise-btn { margin-top: 4px; animation: fade .7s ease 1.9s backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .envelope.arrive, .note, .note-lines li, .note .surprise-btn { animation: none; }
+}

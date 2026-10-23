@@ -38,6 +38,12 @@ Portrait photos (3:4) fit best; other shapes are cropped to fill the frame. If a
 
 Save your audio file in the `public` folder as `letter-song.mp3`. It starts playing when Khayra taps the envelope and loops until she pauses it with the round ♪ button in the bottom right corner. To use another name or format, or to change the volume, edit `AUDIO_FILE` and `AUDIO_VOLUME` at the top of `src/App.jsx`. Set `AUDIO_FILE` to `""` to turn audio off. If the file is missing, the button stays hidden. If you open the page with `#letter`, there is no tap on the envelope, so the music waits for the ♪ button.
 
+## The envelopes and affirmations
+
+Khayra opens a chain of envelopes. Each one holds a card of positive affirmations, and the last envelope opens into the main letter. Everything is in the `LAYERS` list at the top of `src/App.jsx`: add or remove an envelope by adding or removing one `{ label, tone, lines }` block, and reword the `lines` however you like. `tone` picks the envelope color (0 pink, 1 peach, 2 lilac, 3 butter).
+
+The hearts that used to float up when the letter opened are gone. The ones that float up when she taps the photo button remain; set `HEARTS_ON_PHOTO` to `false` in `src/App.jsx` to remove them too.
+
 ## Add your Spotify playlist
 
 Open the playlist in Spotify, choose Share, then Copy link to playlist. Paste it between the quotes of `PLAYLIST_URL` at the top of `src/App.jsx`. An "or maybe also click this" link then appears next to the photo button and opens Spotify in a new tab. While it is empty the link stays hidden.

@@ -27,6 +27,58 @@ const PHOTOS = ["our-photo-1.jpg", "our-photo-2.jpg", "our-photo-3.jpg"].map(
 const AUDIO_FILE = "letter-song.mp3";
 const AUDIO_VOLUME = 0.2; // 0 (silent) to 1 (full)
 
+// The envelopes Khayra opens one after another, BEFORE the main letter.
+// Each one holds its own positive affirmations. Add, remove or reword them freely.
+//   label : the short word printed on the envelope (keep it to 7 letters or fewer so it fits)
+//   lines : the affirmations on the card inside (2 to 4 lines look best)
+//   tone  : 0 pink, 1 peach, 2 lilac, 3 butter (the envelope color)
+const LAYERS = [
+  {
+    label: "FIRST",
+    tone: 0,
+    lines: [
+      "you are so loved, khayra. more than you will ever know.",
+      "you are enough, exactly as you are today.",
+      "your smile can fix my whole day, no joke.",
+    ],
+  },
+  {
+    label: "YOU ARE",
+    tone: 1,
+    lines: [
+      "you are stronger than you think, baby.",
+      "you are allowed to rest, to cry, and to start over.",
+      "you are doing so much better than you give yourself credit for.",
+    ],
+  },
+  {
+    label: "BELIEVE",
+    tone: 2,
+    lines: [
+      "you are beautiful inside and out, and i mean it every single time.",
+      "you deserve soft days and gentle things.",
+      "you are never alone. i’m always on your side.",
+    ],
+  },
+  {
+    label: "ALWAYS",
+    tone: 3,
+    lines: [
+      "you make the world a warmer place just by being in it.",
+      "everything your heart is wishing for is on its way to you.",
+      "and i’m so, so proud of you. always.",
+    ],
+  },
+];
+
+// The last envelope is the main letter. Its label:
+const LETTER_LABEL = "KHAYRA";
+const LETTER_TONE = 0;
+
+// The little hearts that float up when Khayra taps the photo button.
+// They no longer appear when the letter opens. Set to false to remove them completely.
+const HEARTS_ON_PHOTO = true;
+
 function PhotoModal({ src, onClose }) {
   const [missing, setMissing] = useState(false);
 
@@ -172,12 +224,16 @@ function Flourish() {
 }
 
 export default function App() {
-  const [stage, setStage] = useState("closed"); // closed -> opening -> open
+  // layer = which envelope we are on (0 .. LAYERS.length; the last one is the letter).
+  // stage = closed (waiting for a tap) -> opening (flap animating) -> note (affirmations) -> open (main letter)
+  const [layer, setLayer] = useState(0);
+  const [stage, setStage] = useState("closed");
   const [showHearts, setShowHearts] = useState(false);
   const [photoSrc, setPhotoSrc] = useState(null);
   const lastPhoto = useRef(-1);
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
+  const [started, setStarted] = useState(false);
   const [audioOk, setAudioOk] = useState(Boolean(AUDIO_FILE));
 
   // Created inside a tap, so browsers allow it to play.
@@ -209,16 +265,24 @@ export default function App() {
     if (window.location.hash === "#letter") setStage("open");
   }, []);
 
+  const isLetterLayer = layer >= LAYERS.length;
+
   function openIt() {
     if (stage !== "closed") return;
     setStage("opening");
     getAudio()?.play().catch(() => {});
+    setStarted(true);
     setTimeout(() => {
-      setStage("open");
-      setShowHearts(true);
       window.scrollTo(0, 0);
+      // The last envelope opens straight into the letter; the others show their affirmations.
+      setStage(isLetterLayer ? "open" : "note");
     }, 1700);
-    setTimeout(() => setShowHearts(false), 8000);
+  }
+
+  function nextEnvelope() {
+    setLayer((n) => n + 1);
+    setStage("closed");
+    window.scrollTo(0, 0);
   }
 
   function openPhoto() {
@@ -229,10 +293,12 @@ export default function App() {
     }
     lastPhoto.current = next;
     setPhotoSrc(PHOTOS[next]);
-    setShowHearts(false);
-    // Remount the hearts so the burst plays again.
-    setTimeout(() => setShowHearts(true), 0);
-    setTimeout(() => setShowHearts(false), 7000);
+    if (HEARTS_ON_PHOTO) {
+      setShowHearts(false);
+      // Remount the hearts so the burst plays again.
+      setTimeout(() => setShowHearts(true), 0);
+      setTimeout(() => setShowHearts(false), 7000);
+    }
   }
 
   const open = stage === "open";
@@ -241,30 +307,56 @@ export default function App() {
     <main>
       <div className="bg" aria-hidden="true" />
       <section className="gate" hidden={open}>
-        <p className="tag">for Khayra</p>
-        <button
-          type="button"
-          className={`envelope${stage === "opening" ? " opening" : ""}`}
-          onClick={openIt}
-          aria-label="Open the letter for Khayra"
-        >
-          <span className="env-back" />
-          <span className="env-letter" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          <span className="env-front" />
-          <span className="flap-shadow" />
-          <span className="env-flap" />
-          <span className="env-frame" />
-          <span className="stamp" aria-hidden="true">♥</span>
-          <span className="seal" aria-hidden="true">
-            <span className="seal-mark">♥</span>
-          </span>
-          <span className="to">KHAYRA</span>
-        </button>
-        <p className="tag hint">tap to open</p>
+        {stage !== "note" && (
+          <>
+            <p className="tag">
+              {layer === 0 ? "for Khayra" : "keep going"} · {layer + 1} / {LAYERS.length + 1}
+            </p>
+            <button
+              key={layer}
+              type="button"
+              className={`envelope tone-${isLetterLayer ? LETTER_TONE : LAYERS[layer].tone}${
+                stage === "opening" ? " opening" : ""
+              }${layer > 0 ? " arrive" : ""}`}
+              onClick={openIt}
+              aria-label={`Open envelope ${layer + 1} of ${LAYERS.length + 1}`}
+            >
+              <span className="env-back" />
+              <span className="env-letter" aria-hidden="true">
+                <i />
+                <i />
+                <i />
+              </span>
+              <span className="env-front" />
+              <span className="flap-shadow" />
+              <span className="env-flap" />
+              <span className="env-frame" />
+              <span className="stamp" aria-hidden="true">♥</span>
+              <span className="seal" aria-hidden="true">
+                <span className="seal-mark">♥</span>
+              </span>
+              <span className="to">{isLetterLayer ? LETTER_LABEL : LAYERS[layer].label}</span>
+            </button>
+            <p className="tag hint">{isLetterLayer ? "tap to open my letter" : "tap to open"}</p>
+          </>
+        )}
+
+        {stage === "note" && !isLetterLayer && (
+          <div className="note" key={`note-${layer}`}>
+            <p className="tag">
+              {layer + 1} / {LAYERS.length + 1}
+            </p>
+            <ul className="note-lines">
+              {LAYERS[layer].lines.map((line, i) => (
+                <li key={i}>{line}</li>
+              ))}
+            </ul>
+            <Flourish />
+            <button type="button" className="surprise-btn" onClick={nextEnvelope} autoFocus>
+              {layer === LAYERS.length - 1 ? "open my letter ♥" : "next envelope ♥"}
+            </button>
+          </div>
+        )}
       </section>
 
       {open && <FloatingFaces />}
@@ -312,7 +404,7 @@ export default function App() {
         </div>
       )}
 
-      {open && audioOk && (
+      {(open || started) && audioOk && (
         <button
           type="button"
           className={`sound-btn${playing ? " on" : ""}`}
